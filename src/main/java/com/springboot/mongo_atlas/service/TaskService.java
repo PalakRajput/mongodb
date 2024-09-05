@@ -5,7 +5,9 @@ import com.springboot.mongo_atlas.db1.repo.TaskRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +25,7 @@ public class TaskService {
     }
 
     public Task saveTask(Task task) {
+        //repo.save if passed with id will behave as upsert and insert will only save the records.
         task.setId(UUID.randomUUID());
         return taskRepository.save(task);
     }
@@ -51,11 +54,21 @@ public class TaskService {
         task.setStoryPoints(request.getStoryPoints());
         task.setDueDate(request.getDueDate());
         task.setDescription(request.getDescription());
+
+        //Update all with given taskId
+        mongoTemplate.update(Task.class)
+                .matching(Query.query(Criteria.where("taskId").is("")))
+                .apply(new Update().set("assignee", "Jack").inc("storyPoints", 2))
+                .all();
         return taskRepository.save(task);
     }
 
     public String deleteById(UUID taskId) {
         taskRepository.deleteById(taskId);
+
+        mongoTemplate.remove(Task.class)
+                .matching(Query.query(Criteria.where("taskId").is(taskId)))
+                .one();
         return "Task deleted successfully.";
     }
 

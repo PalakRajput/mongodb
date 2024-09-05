@@ -5,6 +5,7 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import com.springboot.mongo_atlas.db2.entity.Student;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,7 @@ public class MongoChangeStreamConfig {
 
 
         // Select the collection to query
-        MongoCollection<Document> collection = database.getCollection("demo");
+        MongoCollection<Student> collection = database.getCollection("demo", Student.class);
 
         // Create pipeline for operationType filter
         List<Bson> pipeline = List.of(
@@ -41,12 +42,13 @@ public class MongoChangeStreamConfig {
                         )));
 
         // Create the Change Stream
-        ChangeStreamIterable<Document> changeStream = collection.watch(pipeline)
+        ChangeStreamIterable<Student> changeStream = collection.watch(pipeline)
                 .fullDocument(FullDocument.UPDATE_LOOKUP);
 
         // Iterate over the Change Stream
-        for (ChangeStreamDocument<Document> changeEvent : changeStream) {
+        for (ChangeStreamDocument<Student> changeEvent : changeStream) {
             // Process the change event here
+            Student document = changeEvent.getFullDocument();
             System.out.println("Time: " + changeEvent.getClusterTime());
             switch (changeEvent.getOperationType()) {
                 case INSERT:
